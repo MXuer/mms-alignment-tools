@@ -1,0 +1,3 @@
+[submodule "uroman"]
+	path = uroman
+	url = git@github.com:isi-nlp/uroman.git
