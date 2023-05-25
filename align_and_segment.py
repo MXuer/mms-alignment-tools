@@ -19,7 +19,6 @@ import torchaudio.functional as F
 SAMPLING_FREQ = 16000
 EMISSION_INTERVAL = 30
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-DEVICE = 'cpu'
 
 def generate_emissions(model, audio_file):
     waveform, _ = torchaudio.load(audio_file)  # waveform: channels X T
@@ -100,9 +99,9 @@ def get_alignments(
 
 
 def main(args):
-    assert not os.path.exists(
-        args.outdir
-    ), f"Error: Output path exists already {args.outdir}"
+    # assert not os.path.exists(
+    #     args.outdir
+    # ), f"Error: Output path exists already {args.outdir}"
     
     transcripts = []
     with open(args.text_filepath) as f:
@@ -116,8 +115,12 @@ def main(args):
     model = model.to(DEVICE)
     if args.use_star:
         dictionary["<star>"] = len(dictionary)
+        stars = ["<star>"] * len(tokens)
+        tokens = [i for pair in zip(tokens, stars) for i in pair]
         tokens = ["<star>"] + tokens
+        transcripts = [i for pair in zip(transcripts, stars) for i in pair]
         transcripts = ["<star>"] + transcripts
+        norm_transcripts = [i for pair in zip(norm_transcripts, stars) for i in pair]
         norm_transcripts = ["<star>"] + norm_transcripts
 
     segments, stride = get_alignments(
@@ -135,6 +138,8 @@ def main(args):
     with open( f"{args.outdir}/manifest.json", "w") as f:
         for i, t in enumerate(transcripts):
             span = spans[i]
+            if span == "<star>":
+                continue
             seg_start_idx = span[0].start
             seg_end_idx = span[-1].end
 
@@ -149,13 +154,14 @@ def main(args):
             
             sample = {
                 "audio_start_sec": audio_start_sec,
+                "audio_end_sec": audio_end_sec,
                 "audio_filepath": str(output_file),
                 "duration": audio_end_sec - audio_start_sec,
                 "text": t,
                 "normalized_text":norm_transcripts[i],
                 "uroman_tokens": tokens[i],
             }
-            f.write(json.dumps(sample) + "\n")
+            f.write(json.dumps(sample, ensure_ascii=False) + "\n")
 
     return segments, stride
 
