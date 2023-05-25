@@ -3,9 +3,45 @@
 
 > **This repository uses alignment tools from [MMS](https://research.facebook.com/publications/scaling-speech-technology-to-1000-languages/). Most of the code(99.99%) from [data_prep](https://github.com/facebookresearch/fairseq/tree/main/examples/mms/data_prep) of the original repository [fairseq](git@github.com:facebookresearch/fairseq.git).**
 
-**What this repo DO: ** Just re-organize the original code to get a pure-functional alignment tools for 1000+ languages.
+**What this repo DO:** Just re-organize the original code to get a pure-functional alignment tools for 1000+ languages.
 
-* [ ] **add silence at the begining and ending to the alignment results.**
+* [X] **get more accurate result by adding **`<star>`** into the token, it get siginificant better results.**
+  **I just changed from:**
+
+  ```
+    if args.use_star:
+        dictionary["<star>"] = len(dictionary)
+        tokens = ["<star>"] + tokens
+        transcripts = ["<star>"] + transcripts
+        norm_transcripts = ["<star>"] + norm_transcripts
+  ```
+
+  To:
+
+  ```
+  if args.use_star:
+      dictionary["<star>"] = len(dictionary)
+      stars = ["<star>"] * len(tokens)
+      tokens = [i for pair in zip(tokens, stars) for i in pair]
+      tokens = ["<star>"] + tokens
+      transcripts = [i for pair in zip(transcripts, stars) for i in pair]
+      transcripts = ["<star>"] + transcripts
+      norm_transcripts = [i for pair in zip(norm_transcripts, stars) for i in pair]
+      norm_transcripts = ["<star>"] + norm_transcripts
+  ```
+
+  and also add a filter to get rid of the **`<star>`** in the final results, line 141 in align_and_segment:
+
+  ```
+  if span == "<star>":
+      continue
+  ```
+
+  The comparision will be added soon with `<star>` or not to show the change.
+* [ ] **get this to be more handy to use by alignment a long audio or just align the words.**
+* [ ] **support more input format and output format, may .wav, .mp3, or maybe just do'nt cut.**
+* [ ] **thinking how to make the language more handy**
+* [ ] **how to make this more** 
 
 ## Enviroments and Model Download
 
@@ -17,7 +53,7 @@
 git clone --recursive https://github.com/MXuer/mms-alignment-tools.git
 ```
 
-* **Download and install torchaudio using the nightly version. We have open sourced the CTC forced alignment algorithm described in our paper via **[torchaudio](https://github.com/pytorch/audio/pull/3348).
+* **Download and install torchaudio using the nightly version**[torchaudio](https://github.com/pytorch/audio/pull/3348).
   ```
   pip install --pre torchaudio --index-url https://download.pytorch.org/whl/nightly/cu118
   ```
