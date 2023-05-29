@@ -79,10 +79,7 @@ def time_to_frame(time):
 def load_model_dict():
     model_path_name = "align_model/model.pt"
 
-    print("Downloading model and dictionary...")
-    if os.path.exists(model_path_name):
-        print("Model path already exists. Skipping downloading....")
-    else:
+    if not os.path.exists(model_path_name):
         torch.hub.download_url_to_file(
             "https://dl.fbaipublicfiles.com/mms/torchaudio/ctc_alignment_mling_uroman/model.pt",
             model_path_name,
@@ -119,10 +116,8 @@ def load_model_dict():
     model.load_state_dict(state_dict)
     model.eval()
 
-    dict_path_name = "/tmp/ctc_alignment_mling_uroman_model.dict"
-    if os.path.exists(dict_path_name):
-        print("Dictionary path already exists. Skipping downloading....")
-    else:
+    dict_path_name = "align_model/ctc_alignment_mling_uroman_model.dict"
+    if not os.path.exists(dict_path_name):
         torch.hub.download_url_to_file(
             "https://dl.fbaipublicfiles.com/mms/torchaudio/ctc_alignment_mling_uroman/dictionary.txt",
             dict_path_name,

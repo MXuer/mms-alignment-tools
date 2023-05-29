@@ -99,10 +99,13 @@ def get_alignments(
 
 
 def main(args):
-    # assert not os.path.exists(
-    #     args.outdir
-    # ), f"Error: Output path exists already {args.outdir}"
-    
+    print(args.outdir)
+    os.makedirs(args.outdir, exist_ok=True)
+    manifest_file = f"{args.outdir}/manifest.json"
+
+    if os.path.exists(manifest_file):
+        return
+
     transcripts = []
     with open(args.text_filepath) as f:
         transcripts = [line.strip() for line in f]
@@ -130,12 +133,11 @@ def main(args):
         dictionary,
         args.use_star,
     )
-    print(stride)
+    
     # Get spans of each line in input text file
     spans = get_spans(tokens, segments)
 
-    os.makedirs(args.outdir)
-    with open( f"{args.outdir}/manifest.json", "w") as f:
+    with open(manifest_file, "w") as f:
         for i, t in enumerate(transcripts):
             span = spans[i]
             if span == "<star>":
@@ -143,24 +145,25 @@ def main(args):
             seg_start_idx = span[0].start
             seg_end_idx = span[-1].end
 
-            output_file = f"{args.outdir}/segment{i}.flac"
-
             audio_start_sec = seg_start_idx * stride / 1000
             audio_end_sec = seg_end_idx * stride / 1000 
 
-            tfm = sox.Transformer()
-            tfm.trim(audio_start_sec , audio_end_sec)
-            tfm.build_file(args.audio_filepath, output_file)
-            
             sample = {
                 "audio_start_sec": audio_start_sec,
                 "audio_end_sec": audio_end_sec,
-                "audio_filepath": str(output_file),
                 "duration": audio_end_sec - audio_start_sec,
                 "text": t,
                 "normalized_text":norm_transcripts[i],
                 "uroman_tokens": tokens[i],
             }
+
+            if args.cut:
+                output_file = f"{args.outdir}/segment{i}.flac"
+                tfm = sox.Transformer()
+                tfm.trim(audio_start_sec , audio_end_sec)
+                tfm.build_file(args.audio_filepath, output_file)
+                sample["audio_filepath"] = str(output_file)
+
             f.write(json.dumps(sample, ensure_ascii=False) + "\n")
 
     return segments, stride
@@ -192,8 +195,14 @@ if __name__ == "__main__":
         type=str,
         help="Output directory to store segmented audio files",
     )
-    print("Using torch version:", torch.__version__)
-    print("Using torchaudio version:", torchaudio.__version__)
-    print("Using device: ", DEVICE)
+    parser.add_argument(
+        "-c",
+        "--cut",
+        action="store_true",
+        help="Output directory to store segmented audio files",
+    )
+    # print("Using torch version:", torch.__version__)
+    # print("Using torchaudio version:", torchaudio.__version__)
+    # print("Using device: ", DEVICE)
     args = parser.parse_args()
     main(args)

@@ -1,11 +1,10 @@
-
 # Description
 
 > **This repository uses alignment tools from [MMS](https://research.facebook.com/publications/scaling-speech-technology-to-1000-languages/). Most of the code(99.99%) from [data_prep](https://github.com/facebookresearch/fairseq/tree/main/examples/mms/data_prep) of the original repository [fairseq](git@github.com:facebookresearch/fairseq.git).**
 
 **What this repo DO:** Just re-organize the original code to get a pure-functional alignment tools for 1000+ languages.
 
-* [X] **get more accurate result by adding **`<star>`** into the token, it get siginificant better results.**
+* [X] **get more accurate result by adding **`<star>`** into the token, it get significant better results.**
   **I just changed from:**
 
   ```
@@ -41,7 +40,7 @@
 * [ ] **get this to be more handy to use by alignment a long audio or just align the words.**
 * [ ] **support more input format and output format, may .wav, .mp3, or maybe just do'nt cut.**
 * [ ] **thinking how to make the language more handy**
-* [ ] **how to make this more** 
+* [ ] **how to make this more automatically**
 
 ## Enviroments and Model Download
 
@@ -54,17 +53,35 @@ git clone --recursive https://github.com/MXuer/mms-alignment-tools.git
 ```
 
 * **Download and install torchaudio using the nightly version**[torchaudio](https://github.com/pytorch/audio/pull/3348).
+
   ```
   pip install --pre torchaudio --index-url https://download.pytorch.org/whl/nightly/cu118
   ```
 * **Install dependecies**
+
   ```
   pip install -r requirements.txt
   ```
 * **Download the model**
+
   ```
   wget -P align_model https://dl.fbaipublicfiles.com/mms/torchaudio/ctc_alignment_mling_uroman/model.pt
+  wget -P align_model https://dl.fbaipublicfiles.com/mms/torchaudio/ctc_alignment_mling_uroman/dictionary.txt
   ```
+
+# Processing multithread
+
+- get a text file with a format `<audio-name>`\t `<audio-path>`\t `<segmented-text1>`\t...\t `<segmented-textn>`
+
+  ```shell
+  audio	/data/audio.wav	what	a	nice	data
+  ```
+- run the script file: `align_and_segment_multi.py` with
+
+  ```
+  python align_and_segment_multi.py -i ../preprocess_c/info.txt -l cmn -o ../preprocess_c/outputs -t 24
+  ```
+- it will give a result in `output directory` with a `manifest.json` contains the alignment information
 
 # Data Preparation
 
